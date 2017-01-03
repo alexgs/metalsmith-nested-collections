@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Use nested collections in Metalsmith",
   "main": "index.js",
+  "engines": {
+    "node": ">=6.9.2"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/philgs/metalsmith-nested-collections.git"
@@ -12,5 +15,17 @@
     "email": "phil.gs@gmail.com",
     "url": "http://philgs.me"
   },
-  "license": "MIT"
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "metalsmith-collections": "^0.9.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "metalsmith": "^2.3.0",
+    "metalsmith-collections": "^0.9.0",
+    "rimraf": "^2.5.4"
+  }
 }
