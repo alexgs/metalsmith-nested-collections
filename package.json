@@ -1,0 +1,16 @@
+{
+  "name": "metalsmith-nested-collections",
+  "version": "0.1.0",
+  "description": "Use nested collections in Metalsmith",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/philgs/metalsmith-nested-collections.git"
+  },
+  "author": {
+    "name": "Phil Gates-Shannon",
+    "email": "phil.gs@gmail.com",
+    "url": "http://philgs.me"
+  },
+  "license": "MIT"
+}
