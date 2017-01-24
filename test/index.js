@@ -3,7 +3,6 @@ let collections = require( 'metalsmith-collections' );
 let chai = require( 'chai' );
 let Metalsmith = require( 'metalsmith' );
 let rimraf = require( 'rimraf' );
-let cloneDeepWith = require( 'lodash.clonedeepwith' );
 
 let expect = chai.expect;
 
@@ -382,25 +381,11 @@ describe( 'metalsmith-nested-collections', function() {
                         reverse: true
                     }
                 } ) )
-                // .use( testPlugin( function( metadata ) {
-                //     let post1 = Object.keys( metadata )[1];
-                //     console.log( Object.keys( metadata[post1]['collection'] ) );
-                //     expect( true ).to.equal( true );
-                // } ) )
                 .build( function( err ) {
                     if ( err ) return done( err );
 
                     let metadata = metalsmith.metadata();
-                    // console.log( Object.keys( metadata ) );
-                    // let metadataPrettyPrint = metadata;
-                    // metadataPrettyPrint = cloneDeepWith( metadataPrettyPrint, metalsmithPrune );
-                    // metadataPrettyPrint = cloneDeepWith( metadataPrettyPrint, pruneNextPrev );
-                    // metadataPrettyPrint = cloneDeepWith( metadataPrettyPrint, pruneContents );
-                    // metadataPrettyPrint = cloneDeepWith( metadataPrettyPrint, decircularizer );
-                    // console.log( JSON.stringify( metadataPrettyPrint, null, 2 ) );
-                    // console.log( JSON.stringify( metadataPrettyPrint, metalsmithReplacer, 2 ) );
                     console.log( JSON.stringify( metadata, metalsmithReplacer, 2 ) );
-                    // let articles = metalsmith.metadata().articles;
                     done();
                 } );
         } );
@@ -409,34 +394,17 @@ describe( 'metalsmith-nested-collections', function() {
 
 } );
 
-const testPlugin = function testPlugin( expectFunction ) {
-    return function( files, metalsmith, done ) {
-        setImmediate( done );
-        expectFunction( files );
-    }
-};
-
-const decircularizer = function( value, key, parent, stack ) {
-    let circular = !!( stack && stack.get( value ) );
-    if ( circular ) {
-        return '[[ Circular Ref: ' + key + ' ]]';
-    } else {
-        // Let Lodash clone as normal
-        return undefined;
-    }
-};
-
 const metalsmithReplacer = function( key, value ) {
     if ( key === 'contents' || key === 'stats' ) {
         return '...';
     }
 
     if ( key === 'next' ) {
-        return value && value.title ? value.title : '[[ Next ]]';
+        return ( value && value.title ) ? value.title : '[[ Next ]]';
     }
 
     if ( key === 'previous' ) {
-        return value && value.title ? value.title : '[[ Prev ]]';
+        return ( value && value.title ) ? value.title : '[[ Prev ]]';
     }
 
     // Default
