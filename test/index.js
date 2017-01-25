@@ -1,9 +1,14 @@
 let assert = require( 'assert' );
 let collections = require( 'metalsmith-collections' );
 let chai = require( 'chai' );
+let dirtyChai = require( 'dirty-chai' );
+let fs = require( 'fs' );
 let Metalsmith = require( 'metalsmith' );
+let nestedCollections = require( '../index' );
+let path = require( 'path' );
 let rimraf = require( 'rimraf' );
 
+chai.use( dirtyChai );
 let expect = chai.expect;
 
 describe( 'metalsmith-nested-collections', function() {
@@ -354,15 +359,88 @@ describe( 'metalsmith-nested-collections', function() {
 
     } );
 
-    context( 'provides functionality that', function() {
-        const fixturePath = 'test/nested-fixtures';
+    context.only( 'provides functionality that', function() {
+        const fixtureRoot = path.resolve( __dirname, 'nested-fixtures' );
 
         before( function( done ) {
-            rimraf( fixturePath + '/*/build', done );
+            rimraf( fixtureRoot + '/*/build', done );
         } );
 
-        it( 'adds "nextInCollection" and "prevInCollection" to file metadata' );
+        it( 'adds "nextInCollection" and "prevInCollection" to file metadata', function( done ) {
+            let fixturePath = path.resolve( fixtureRoot, 'basic' );
+            let metalsmith = Metalsmith( fixturePath );
+            metalsmith
+                .use( collections( {
+                    posts: {
+                        pattern: 'posts/**/*.md',
+                        sortBy: 'date',
+                        reverse: true
+                    },
+                    'metalsmith-tutorial': {
+                        pattern: 'posts/metalsmith-tutorial/*.md',
+                        sortBy: 'date',
+                        reverse: true
+                    },
+                    'shocking-secret': {
+                        pattern: 'posts/shocking-secret/*.md',
+                        sortBy: 'date',
+                        reverse: true
+                    }
+                } ) )
+                .use( nestedCollections() )
+                .build( function( err, files ) {
+                    if ( err ) return done( err );
+                    let metadata = metalsmith.metadata();
+
+                    // Save file and collection metadata to JSON files
+                    let metadataCollection = {
+                        files: files,
+                        collections: metadata
+                    };
+                    saveMetadata( fixturePath, metadataCollection );
+
+                    // Test using the `collections` group in the global metadata
+                    let names = Object.keys( metadata.collections );
+                    for ( let name of names ) {
+                        let collection = metadata[ name ];
+                        expect( Array.isArray( collection ) ).to.be.true();
+                        collection.forEach( file => {
+                            expect( file ).to.have.ownProperty( 'nextInCollection' );
+                            expect( file ).to.have.ownProperty( 'prevInCollection' );
+                        } );
+                    }
+
+                    done();
+                } );
+        } );
 
     } );
 
 } );
+
+const metalsmithReplacer = function( key, value ) {
+    if ( key === 'contents' || key === 'stats' ) {
+        return '...';
+    }
+
+    if ( key === 'next' ) {
+        return ( value && value.title ) ? value.title : '[[ Next ]]';
+    }
+
+    if ( key === 'previous' ) {
+        return ( value && value.title ) ? value.title : '[[ Prev ]]';
+    }
+
+    // Default
+    return value;
+};
+
+const saveMetadata = function( outputDir, metadataObject ) {
+    let keys = Object.keys( metadataObject );
+    for ( let key of keys ) {
+        let json = JSON.stringify( metadataObject[ key ], metalsmithReplacer, 2 );
+        let filename = key + '.json';
+        let filePath = path.resolve( outputDir, filename );
+        fs.writeFileSync( filePath, json );
+    }
+};
