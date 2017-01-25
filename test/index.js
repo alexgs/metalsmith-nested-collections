@@ -363,7 +363,7 @@ describe( 'metalsmith-nested-collections', function() {
             rimraf( fixtureRoot + '/*/build', done );
         } );
 
-        it( 'adds "nextInCollection" and "prevInCollection" to file metadata', function( done ){
+        it( 'adds "nextInCollection" and "prevInCollection" to file metadata', function( done ) {
             let fixturePath = path.resolve( fixtureRoot, 'basic' );
             let metalsmith = Metalsmith( fixturePath );
             metalsmith
@@ -386,16 +386,15 @@ describe( 'metalsmith-nested-collections', function() {
                 } ) )
                 .build( function( err, files ) {
                     if ( err ) return done( err );
-
-                    let outputPath = path.resolve( fixturePath, 'build' );
                     let metadata = metalsmith.metadata();
 
-                    let filesJson = JSON.stringify( files, metalsmithReplacer, 2 );
-                    let metadataJson = JSON.stringify( metadata, metalsmithReplacer, 2 );
-                    fs.writeFileSync( path.resolve( outputPath, 'files.json' ), filesJson );
-                    fs.writeFileSync( path.resolve( outputPath, 'metadata.json' ), metadataJson );
-                    // console.log( filesJson );
-                    // console.log( metadataJson );
+                    // Save file and collection metadata to JSON files
+                    let metadataCollection = {
+                        files: files,
+                        collections: metadata
+                    };
+                    saveMetadata( fixturePath, metadataCollection );
+
                     done();
                 } );
         } );
@@ -421,3 +420,12 @@ const metalsmithReplacer = function( key, value ) {
     return value;
 };
 
+const saveMetadata = function( outputDir, metadataObject ) {
+    let keys = Object.keys( metadataObject );
+    for ( let key of keys ) {
+        let json = JSON.stringify( metadataObject[ key ], metalsmithReplacer, 2 );
+        let filename = key + '.json';
+        let filePath = path.resolve( outputDir, filename );
+        fs.writeFileSync( filePath, json );
+    }
+};
