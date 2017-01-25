@@ -1,7 +1,9 @@
 let assert = require( 'assert' );
 let collections = require( 'metalsmith-collections' );
 let chai = require( 'chai' );
+let fs = require( 'fs' );
 let Metalsmith = require( 'metalsmith' );
+let path = require( 'path' );
 let rimraf = require( 'rimraf' );
 
 let expect = chai.expect;
@@ -355,14 +357,15 @@ describe( 'metalsmith-nested-collections', function() {
     } );
 
     context.only( 'provides functionality that', function() {
-        const fixturePath = 'test/nested-fixtures';
+        const fixtureRoot = path.resolve( __dirname, 'nested-fixtures' );
 
         before( function( done ) {
-            rimraf( fixturePath + '/*/build', done );
+            rimraf( fixtureRoot + '/*/build', done );
         } );
 
         it( 'adds "nextInCollection" and "prevInCollection" to file metadata', function( done ){
-            let metalsmith = Metalsmith( fixturePath + '/basic' );
+            let fixturePath = path.resolve( fixtureRoot, 'basic' );
+            let metalsmith = Metalsmith( fixturePath );
             metalsmith
                 .use( collections( {
                     posts: {
@@ -381,11 +384,18 @@ describe( 'metalsmith-nested-collections', function() {
                         reverse: true
                     }
                 } ) )
-                .build( function( err ) {
+                .build( function( err, files ) {
                     if ( err ) return done( err );
 
+                    let outputPath = path.resolve( fixturePath, 'build' );
                     let metadata = metalsmith.metadata();
-                    console.log( JSON.stringify( metadata, metalsmithReplacer, 2 ) );
+
+                    let filesJson = JSON.stringify( files, metalsmithReplacer, 2 );
+                    let metadataJson = JSON.stringify( metadata, metalsmithReplacer, 2 );
+                    fs.writeFileSync( path.resolve( outputPath, 'files.json' ), filesJson );
+                    fs.writeFileSync( path.resolve( outputPath, 'metadata.json' ), metadataJson );
+                    // console.log( filesJson );
+                    // console.log( metadataJson );
                     done();
                 } );
         } );
