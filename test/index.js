@@ -1,11 +1,13 @@
 let assert = require( 'assert' );
 let collections = require( 'metalsmith-collections' );
 let chai = require( 'chai' );
+let dirtyChai = require( 'dirty-chai' );
 let fs = require( 'fs' );
 let Metalsmith = require( 'metalsmith' );
 let path = require( 'path' );
 let rimraf = require( 'rimraf' );
 
+chai.use( dirtyChai );
 let expect = chai.expect;
 
 describe( 'metalsmith-nested-collections', function() {
@@ -394,6 +396,17 @@ describe( 'metalsmith-nested-collections', function() {
                         collections: metadata
                     };
                     saveMetadata( fixturePath, metadataCollection );
+
+                    // Test
+                    let names = Object.keys( metadata );
+                    for ( let name of names ) {
+                        let collection = metadata[ name ];
+                        expect( Array.isArray( collection ) ).to.be.true();
+                        collection.forEach( file => {
+                            expect( file ).to.have.ownProperty( 'nextInCollection' );
+                            expect( file ).to.have.ownProperty( 'prevInCollection' );
+                        } );
+                    }
 
                     done();
                 } );
