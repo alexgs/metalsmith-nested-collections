@@ -362,6 +362,23 @@ describe( 'metalsmith-nested-collections', function() {
 
     context( 'provides functionality that', function() {
         const fixtureRoot = path.resolve( __dirname, 'nested-fixtures' );
+        const collectionsConfig = {
+            posts: {
+                pattern: 'posts/**/*.md',
+                sortBy: 'date',
+                reverse: true
+            },
+            'metalsmith-tutorial': {
+                pattern: 'posts/metalsmith-tutorial/*.md',
+                sortBy: 'date',
+                reverse: true
+            },
+            'shocking-secret': {
+                pattern: 'posts/shocking-secret/*.md',
+                sortBy: 'date',
+                reverse: true
+            }
+        };
 
         before( function( done ) {
             rimraf( fixtureRoot + '/*/build', done );
@@ -371,23 +388,7 @@ describe( 'metalsmith-nested-collections', function() {
             let fixturePath = path.resolve( fixtureRoot, 'basic' );
             let metalsmith = Metalsmith( fixturePath );
             metalsmith
-                .use( collections( {
-                    posts: {
-                        pattern: 'posts/**/*.md',
-                        sortBy: 'date',
-                        reverse: true
-                    },
-                    'metalsmith-tutorial': {
-                        pattern: 'posts/metalsmith-tutorial/*.md',
-                        sortBy: 'date',
-                        reverse: true
-                    },
-                    'shocking-secret': {
-                        pattern: 'posts/shocking-secret/*.md',
-                        sortBy: 'date',
-                        reverse: true
-                    }
-                } ) )
+                .use( collections( collectionsConfig ) )
                 .build( function( err, files ) {
                     if ( err ) return done( err );
                     let metadata = metalsmith.metadata();
@@ -404,12 +405,41 @@ describe( 'metalsmith-nested-collections', function() {
                     for ( let name of names ) {
                         let collection = metadata[ name ];
                         expect( Array.isArray( collection ) ).to.be.true();
-                        collection.forEach( file => {
-                            expect( file ).to.have.ownProperty( 'nextInCollection' );
-                            expect( file ).to.have.ownProperty( 'prevInCollection' );
+                        collection.forEach( ( file, index, array ) => {
+                            if ( index > 0 ) {
+                                expect( file ).to.have.ownProperty( 'prevInCollection' );
+                            }
+                            if ( index < ( array.length - 1 ) ) {
+                                expect( file ).to.have.ownProperty( 'nextInCollection' );
+                            }
                         } );
                     }
 
+                    done();
+                } );
+        } );
+
+        it( 'adds links by collection to each file', function( done ) {
+            let fixturePath = path.resolve( fixtureRoot, 'basic' );
+            let metalsmith = Metalsmith( fixturePath );
+            metalsmith
+                .use( collections( collectionsConfig ) )
+                .build( function( err, files ) {
+                    if ( err ) return done( err );
+                    let metadata = metalsmith.metadata();
+                    let thereIsMoreToDo = true;
+
+                    // Test using the `collections` group in the global metadata
+                    let collection = metadata.collections[ 'posts' ];
+                    expect( Array.isArray( collection ) ).to.be.true();
+                    collection.forEach( ( file, index, array ) => {
+                        if ( index < ( array.length - 1) ) {
+                            let nextLinks = file.nextInCollection;
+                            expect( nextLinks ).to.be.ok();
+                            expect( nextLinks ).to.have.ownProperty( 'posts' );
+                        }
+                    } );
+                    expect( thereIsMoreToDo, '**There is more to do!** ' ).to.be.false();
                     done();
                 } );
         } );
