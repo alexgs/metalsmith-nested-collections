@@ -4,6 +4,7 @@ let chai = require( 'chai' );
 let dirtyChai = require( 'dirty-chai' );
 let fs = require( 'fs' );
 let Metalsmith = require( 'metalsmith' );
+let nestedCollections = require( '../index' );
 let path = require( 'path' );
 let rimraf = require( 'rimraf' );
 
@@ -386,6 +387,7 @@ describe( 'metalsmith-nested-collections', function() {
                         reverse: true
                     }
                 } ) )
+                .use( nestedCollections() )
                 .build( function( err, files ) {
                     if ( err ) return done( err );
                     let metadata = metalsmith.metadata();
@@ -397,8 +399,8 @@ describe( 'metalsmith-nested-collections', function() {
                     };
                     saveMetadata( fixturePath, metadataCollection );
 
-                    // Test
-                    let names = Object.keys( metadata );
+                    // Test using the `collections` group in the global metadata
+                    let names = Object.keys( metadata.collections );
                     for ( let name of names ) {
                         let collection = metadata[ name ];
                         expect( Array.isArray( collection ) ).to.be.true();
