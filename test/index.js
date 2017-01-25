@@ -2,10 +2,12 @@ let assert = require( 'assert' );
 let collections = require( '../index' );
 let chai = require( 'chai' );
 let dirtyChai = require( 'dirty-chai' );
-let fs = require( 'fs' );
 let Metalsmith = require( 'metalsmith' );
 let path = require( 'path' );
 let rimraf = require( 'rimraf' );
+
+let metalsmithReplacer = require( '../lib/utilities/metalsmithReplacer' );
+let saveMetadata = require( '../lib/utilities/saveMetadata' );
 
 chai.use( dirtyChai );
 let expect = chai.expect;
@@ -415,30 +417,3 @@ describe( 'metalsmith-nested-collections', function() {
     } );
 
 } );
-
-const metalsmithReplacer = function( key, value ) {
-    if ( key === 'contents' || key === 'stats' ) {
-        return '...';
-    }
-
-    if ( key === 'next' ) {
-        return ( value && value.title ) ? value.title : '[[ Next ]]';
-    }
-
-    if ( key === 'previous' ) {
-        return ( value && value.title ) ? value.title : '[[ Prev ]]';
-    }
-
-    // Default
-    return value;
-};
-
-const saveMetadata = function( outputDir, metadataObject ) {
-    let keys = Object.keys( metadataObject );
-    for ( let key of keys ) {
-        let json = JSON.stringify( metadataObject[ key ], metalsmithReplacer, 2 );
-        let filename = key + '.json';
-        let filePath = path.resolve( outputDir, filename );
-        fs.writeFileSync( filePath, json );
-    }
-};
