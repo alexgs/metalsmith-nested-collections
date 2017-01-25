@@ -1,8 +1,23 @@
-# Nested collections
+# Nested Collections
 
-This plugin allows you to add files to multiple collections and have next/previous links for each collection.
+**Nested Collections** is a drop-in replacement for the ["Metalsmith Collections" plugin][1]. This means you can start using it today without any changes to your build process!
 
-It also adds namespaces for collections, making it easier to manage multiple sites from a single repository and build file. This might be useful, for example, if you want to have one site point to the most recent posts on another site.
+It's as easy as
+
+```javascript
+let collections = require( 'metalsmith-nested-collections' );
+```
+
+It doesn't do anything fancy at the moment ([v0.1.0][2]), but new features and functionality are coming fast!
+
+[1]: https://github.com/segmentio/metalsmith-collections
+[2]: https://github.com/philgs/metalsmith-nested-collections/releases/tag/v0.1.0
+
+## Planned Features
+
+**Nested Collections** will allow you to add files to multiple collections and have next/previous links for each collection.
+
+**Nested Collections** will also add namespaces for collections, making it easier to manage multiple sites from a single repository and build file. This might be useful, for example, if you want to have one site point to the most recent posts on another site.
 
 ## License
 
