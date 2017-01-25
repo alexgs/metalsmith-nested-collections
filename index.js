@@ -1,5 +1,6 @@
 let debug = require( 'debug' )( 'metalsmith-nested-collections' );
 let collections = require( 'metalsmith-collections' );
+let addCollectionLinks = require( './lib/helpers/addCollectionLinks' );
 
 let plugin = function plugin( options ) {
 
@@ -10,19 +11,7 @@ let plugin = function plugin( options ) {
 
         let newWorker = function() {
             let metadata = metalsmith.metadata();
-            let names = Object.keys( metadata.collections );
-            for ( let name of names ) {
-                let collection = metadata[ name ];
-                let colMetadata = collection.metadata;
-                collection = collection.map( file => {
-                    file.nextInCollection = [];
-                    file.prevInCollection = [];
-                    return file;
-                } );
-                collection.metadata = colMetadata;
-                metadata[ name ] = collection;
-                metadata.collections[ name ] = collection;
-            }
+            addCollectionLinks( metadata );
         };
 
         oldWorker( files, metalsmith, newWorker );
