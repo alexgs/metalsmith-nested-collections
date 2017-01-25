@@ -1,10 +1,9 @@
 let assert = require( 'assert' );
-let collections = require( 'metalsmith-collections' );
+let collections = require( '../index' );
 let chai = require( 'chai' );
 let dirtyChai = require( 'dirty-chai' );
 let fs = require( 'fs' );
 let Metalsmith = require( 'metalsmith' );
-let nestedCollections = require( '../index' );
 let path = require( 'path' );
 let rimraf = require( 'rimraf' );
 
@@ -13,7 +12,7 @@ let expect = chai.expect;
 
 describe( 'metalsmith-nested-collections', function() {
 
-    context( 'does not affect the behavior of `metalsmith-collections`, which', function() {
+    context( 'is a drop-in replacement for `metalsmith-collections`, so this plugin', function() {
         const fixturePath = 'test/collection-fixtures';
 
         before( function( done ) {
@@ -359,7 +358,7 @@ describe( 'metalsmith-nested-collections', function() {
 
     } );
 
-    context.only( 'provides functionality that', function() {
+    context( 'provides functionality that', function() {
         const fixtureRoot = path.resolve( __dirname, 'nested-fixtures' );
 
         before( function( done ) {
@@ -387,7 +386,6 @@ describe( 'metalsmith-nested-collections', function() {
                         reverse: true
                     }
                 } ) )
-                .use( nestedCollections() )
                 .build( function( err, files ) {
                     if ( err ) return done( err );
                     let metadata = metalsmith.metadata();
