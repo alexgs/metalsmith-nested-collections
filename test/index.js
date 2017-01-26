@@ -474,7 +474,7 @@ describe( 'metalsmith-nested-collections', function() {
                 } );
         } );
 
-        it( 'correctly links between files in each collection', function( done ){
+        it( 'correctly links between files in each collection', function( done ) {
             let fixturePath = path.resolve( fixtureRoot, 'basic' );
             let metalsmith = Metalsmith( fixturePath );
             metalsmith
@@ -484,42 +484,47 @@ describe( 'metalsmith-nested-collections', function() {
 
                     let todo = [
                         // 'test links in "metalsmith-tutorial" collection',
-                        'test links in "shocking-secret" collection',
-                        'test links in "posts" collection'
+                        // 'test links in "shocking-secret" collection',
+                        // 'test links in "posts" collection'
                     ];
                     let todoMessage = ' <<< There are still ' + todo.length + ' items to complete! >>> ';
 
                     let metadata = metalsmith.metadata();
 
-                    // --- TEST "METALSMITH TUTORIAL" COLLECTION ---
-                    let name = 'metalsmith-tutorial';
-                    let collection = metadata.collections[ name ];
-                    let expectedCollection = expectedCollections[ name ];
-                    expect( Array.isArray( collection ) ).to.be.true();
-                    expect( collection.length ).to.equal( expectedCollection.length );
-                    collection.forEach( ( file, index, array ) => {
-                        expect( file.title ).to.equal( expectedCollection[ index ] );
-                        if ( index === 0 ) {
-                            expect( file.prevInCollection ).to.not.have.ownProperty( name );
+                    // --- TEST COLLECTIONS ---
+                    Object.keys( expectedCollections ).forEach( name => {
+                        let collection = metadata.collections[ name ];
+                        let expectedCollection = expectedCollections[ name ];
+                        expect( Array.isArray( collection ) ).to.be.true();
+                        expect( collection.length ).to.equal( expectedCollection.length );
+                        collection.forEach( ( file, index, array ) => {
+                            expect( file.title ).to.equal( expectedCollection[ index ] );
+                            if ( index === 0 ) {
+                                if ( file.hasOwnProperty( 'prevInCollection' ) ) {
+                                    expect( file.prevInCollection ).to.not.have.ownProperty( name );
+                                }
 
-                            let nextTitle = array[ index + 1 ].title;
-                            expect( file.nextInCollection ).to.have.ownProperty( name );
-                            expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
-                        } else if ( index === ( array.length - 1 ) ) {
-                            expect( file.nextInCollection ).to.not.have.ownProperty( name );
+                                let nextTitle = array[ index + 1 ].title;
+                                expect( file.nextInCollection ).to.have.ownProperty( name );
+                                expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
+                            } else if ( index === ( array.length - 1 ) ) {
+                                if ( file.hasOwnProperty( 'nextInCollection' ) ) {
+                                    expect( file.nextInCollection ).to.not.have.ownProperty( name );
+                                }
 
-                            let prevTitle = array[ index - 1 ].title;
-                            expect( file.prevInCollection ).to.have.ownProperty( name );
-                            expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
-                        } else {
-                            let nextTitle = array[ index + 1 ].title;
-                            expect( file.nextInCollection ).to.have.ownProperty( name );
-                            expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
+                                let prevTitle = array[ index - 1 ].title;
+                                expect( file.prevInCollection ).to.have.ownProperty( name );
+                                expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
+                            } else {
+                                let nextTitle = array[ index + 1 ].title;
+                                expect( file.nextInCollection ).to.have.ownProperty( name );
+                                expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
 
-                            let prevTitle = array[ index - 1 ].title;
-                            expect( file.prevInCollection ).to.have.ownProperty( name );
-                            expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
-                        }
+                                let prevTitle = array[ index - 1 ].title;
+                                expect( file.prevInCollection ).to.have.ownProperty( name );
+                                expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
+                            }
+                        } );
                     } );
 
                     expect( todo, todoMessage ).to.have.lengthOf( 0 );
