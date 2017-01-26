@@ -379,6 +379,28 @@ describe( 'metalsmith-nested-collections', function() {
                 reverse: true
             }
         };
+        const expectedCollections = {
+            posts: [
+                'A Shocking Secret, Part 2',
+                'Dolor',
+                'Amet',
+                'Metalsmith Tutorial, Part 3',
+                'Metalsmith Tutorial, Part 2',
+                'Ipsum',
+                'Lorem',
+                'Metalsmith Tutorial, Part 1',
+                'A Shocking Secret, Part 1'
+            ],
+            'metalsmith-tutorial': [
+                'Metalsmith Tutorial, Part 3',
+                'Metalsmith Tutorial, Part 2',
+                'Metalsmith Tutorial, Part 1'
+            ],
+            'shocking-secret': [
+                'A Shocking Secret, Part 2',
+                'A Shocking Secret, Part 1'
+            ]
+        };
 
         before( function( done ) {
             rimraf( fixtureRoot + '/*/build', done );
@@ -461,11 +483,44 @@ describe( 'metalsmith-nested-collections', function() {
                     if ( err ) return done( err );
 
                     let todo = [
-                        'test links in "metalsmith-tutorial" collection',
+                        // 'test links in "metalsmith-tutorial" collection',
                         'test links in "shocking-secret" collection',
                         'test links in "posts" collection'
                     ];
                     let todoMessage = ' <<< There are still ' + todo.length + ' items to complete! >>> ';
+
+                    let metadata = metalsmith.metadata();
+
+                    // --- TEST "METALSMITH TUTORIAL" COLLECTION ---
+                    let name = 'metalsmith-tutorial';
+                    let collection = metadata.collections[ name ];
+                    let expectedCollection = expectedCollections[ name ];
+                    expect( Array.isArray( collection ) ).to.be.true();
+                    expect( collection.length ).to.equal( expectedCollection.length );
+                    collection.forEach( ( file, index, array ) => {
+                        expect( file.title ).to.equal( expectedCollection[ index ] );
+                        if ( index === 0 ) {
+                            expect( file.prevInCollection ).to.not.have.ownProperty( name );
+
+                            let nextTitle = array[ index + 1 ].title;
+                            expect( file.nextInCollection ).to.have.ownProperty( name );
+                            expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
+                        } else if ( index === ( array.length - 1 ) ) {
+                            expect( file.nextInCollection ).to.not.have.ownProperty( name );
+
+                            let prevTitle = array[ index - 1 ].title;
+                            expect( file.prevInCollection ).to.have.ownProperty( name );
+                            expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
+                        } else {
+                            let nextTitle = array[ index + 1 ].title;
+                            expect( file.nextInCollection ).to.have.ownProperty( name );
+                            expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
+
+                            let prevTitle = array[ index - 1 ].title;
+                            expect( file.prevInCollection ).to.have.ownProperty( name );
+                            expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
+                        }
+                    } );
 
                     expect( todo, todoMessage ).to.have.lengthOf( 0 );
                     done();
