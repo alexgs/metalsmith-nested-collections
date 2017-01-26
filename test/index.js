@@ -451,6 +451,23 @@ describe( 'metalsmith-nested-collections', function() {
                     done();
                 } );
         } );
+
+        it( 'correctly links between files in each collection', function( done ){
+            let fixturePath = path.resolve( fixtureRoot, 'basic' );
+            let metalsmith = Metalsmith( fixturePath );
+            metalsmith
+                .use( collections( collectionsConfig ) )
+                .build( function( err, files ) {
+                    if ( err ) return done( err );
+
+                    let todo = [
+                        'test links in "metalsmith-tutorial" collection',
+                        'test links in "shocking-secret" collection',
+                        'test links in "posts" collection'
+                    ];
+                    let todoMessage = ' <<< There are still ' + todo.length + ' items to complete! >>> ';
+
+                    expect( todo, todoMessage ).to.have.lengthOf( 0 );
                     done();
                 } );
         } );
