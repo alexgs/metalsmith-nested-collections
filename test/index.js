@@ -427,19 +427,30 @@ describe( 'metalsmith-nested-collections', function() {
                 .build( function( err, files ) {
                     if ( err ) return done( err );
                     let metadata = metalsmith.metadata();
-                    let thereIsMoreToDo = true;
 
                     // Test using the `collections` group in the global metadata
-                    let collection = metadata.collections[ 'posts' ];
-                    expect( Array.isArray( collection ) ).to.be.true();
-                    collection.forEach( ( file, index, array ) => {
-                        if ( index < ( array.length - 1) ) {
-                            let nextLinks = file.nextInCollection;
-                            expect( nextLinks ).to.be.ok();
-                            expect( nextLinks ).to.have.ownProperty( 'posts' );
-                        }
-                    } );
-                    expect( thereIsMoreToDo, '**There is more to do!** ' ).to.be.false();
+                    let names = Object.keys( metadata.collections );
+                    for ( let name of names ) {
+                        let collection = metadata.collections[ name ];
+                        expect( Array.isArray( collection ) ).to.be.true();
+                        collection.forEach( ( file, index, array ) => {
+                            if ( index > 0 ) {
+                                let prevLinks = file.prevInCollection;
+                                expect( prevLinks ).to.be.ok();
+                                expect( prevLinks ).to.have.ownProperty( name );
+                            }
+
+                            if ( index < ( array.length - 1) ) {
+                                let nextLinks = file.nextInCollection;
+                                expect( nextLinks ).to.be.ok();
+                                expect( nextLinks ).to.have.ownProperty( name );
+                            }
+                        } );
+                    }
+
+                    done();
+                } );
+        } );
                     done();
                 } );
         } );
