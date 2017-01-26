@@ -362,6 +362,45 @@ describe( 'metalsmith-nested-collections', function() {
 
     context( 'provides functionality that', function() {
         const fixtureRoot = path.resolve( __dirname, 'nested-fixtures' );
+        const collectionsConfig = {
+            posts: {
+                pattern: 'posts/**/*.md',
+                sortBy: 'date',
+                reverse: true
+            },
+            'metalsmith-tutorial': {
+                pattern: 'posts/metalsmith-tutorial/*.md',
+                sortBy: 'date',
+                reverse: true
+            },
+            'shocking-secret': {
+                pattern: 'posts/shocking-secret/*.md',
+                sortBy: 'date',
+                reverse: true
+            }
+        };
+        const expectedCollections = {
+            posts: [
+                'A Shocking Secret, Part 2',
+                'Dolor',
+                'Amet',
+                'Metalsmith Tutorial, Part 3',
+                'Metalsmith Tutorial, Part 2',
+                'Ipsum',
+                'Lorem',
+                'Metalsmith Tutorial, Part 1',
+                'A Shocking Secret, Part 1'
+            ],
+            'metalsmith-tutorial': [
+                'Metalsmith Tutorial, Part 3',
+                'Metalsmith Tutorial, Part 2',
+                'Metalsmith Tutorial, Part 1'
+            ],
+            'shocking-secret': [
+                'A Shocking Secret, Part 2',
+                'A Shocking Secret, Part 1'
+            ]
+        };
 
         before( function( done ) {
             rimraf( fixtureRoot + '/*/build', done );
@@ -371,23 +410,7 @@ describe( 'metalsmith-nested-collections', function() {
             let fixturePath = path.resolve( fixtureRoot, 'basic' );
             let metalsmith = Metalsmith( fixturePath );
             metalsmith
-                .use( collections( {
-                    posts: {
-                        pattern: 'posts/**/*.md',
-                        sortBy: 'date',
-                        reverse: true
-                    },
-                    'metalsmith-tutorial': {
-                        pattern: 'posts/metalsmith-tutorial/*.md',
-                        sortBy: 'date',
-                        reverse: true
-                    },
-                    'shocking-secret': {
-                        pattern: 'posts/shocking-secret/*.md',
-                        sortBy: 'date',
-                        reverse: true
-                    }
-                } ) )
+                .use( collections( collectionsConfig ) )
                 .build( function( err, files ) {
                     if ( err ) return done( err );
                     let metadata = metalsmith.metadata();
@@ -404,12 +427,107 @@ describe( 'metalsmith-nested-collections', function() {
                     for ( let name of names ) {
                         let collection = metadata[ name ];
                         expect( Array.isArray( collection ) ).to.be.true();
-                        collection.forEach( file => {
-                            expect( file ).to.have.ownProperty( 'nextInCollection' );
-                            expect( file ).to.have.ownProperty( 'prevInCollection' );
+                        collection.forEach( ( file, index, array ) => {
+                            if ( index > 0 ) {
+                                expect( file ).to.have.ownProperty( 'prevInCollection' );
+                            }
+                            if ( index < ( array.length - 1 ) ) {
+                                expect( file ).to.have.ownProperty( 'nextInCollection' );
+                            }
                         } );
                     }
 
+                    done();
+                } );
+        } );
+
+        it( 'adds links by collection to each file', function( done ) {
+            let fixturePath = path.resolve( fixtureRoot, 'basic' );
+            let metalsmith = Metalsmith( fixturePath );
+            metalsmith
+                .use( collections( collectionsConfig ) )
+                .build( function( err, files ) {
+                    if ( err ) return done( err );
+                    let metadata = metalsmith.metadata();
+
+                    // Test using the `collections` group in the global metadata
+                    let names = Object.keys( metadata.collections );
+                    for ( let name of names ) {
+                        let collection = metadata.collections[ name ];
+                        expect( Array.isArray( collection ) ).to.be.true();
+                        collection.forEach( ( file, index, array ) => {
+                            if ( index > 0 ) {
+                                let prevLinks = file.prevInCollection;
+                                expect( prevLinks ).to.be.ok();
+                                expect( prevLinks ).to.have.ownProperty( name );
+                            }
+
+                            if ( index < ( array.length - 1) ) {
+                                let nextLinks = file.nextInCollection;
+                                expect( nextLinks ).to.be.ok();
+                                expect( nextLinks ).to.have.ownProperty( name );
+                            }
+                        } );
+                    }
+
+                    done();
+                } );
+        } );
+
+        it( 'correctly links between files in each collection', function( done ) {
+            let fixturePath = path.resolve( fixtureRoot, 'basic' );
+            let metalsmith = Metalsmith( fixturePath );
+            metalsmith
+                .use( collections( collectionsConfig ) )
+                .build( function( err, files ) {
+                    if ( err ) return done( err );
+
+                    let todo = [
+                        // 'test links in "metalsmith-tutorial" collection',
+                        // 'test links in "shocking-secret" collection',
+                        // 'test links in "posts" collection'
+                    ];
+                    let todoMessage = ' <<< There are still ' + todo.length + ' items to complete! >>> ';
+
+                    let metadata = metalsmith.metadata();
+
+                    // --- TEST COLLECTIONS ---
+                    Object.keys( expectedCollections ).forEach( name => {
+                        let collection = metadata.collections[ name ];
+                        let expectedCollection = expectedCollections[ name ];
+                        expect( Array.isArray( collection ) ).to.be.true();
+                        expect( collection.length ).to.equal( expectedCollection.length );
+                        collection.forEach( ( file, index, array ) => {
+                            expect( file.title ).to.equal( expectedCollection[ index ] );
+                            if ( index === 0 ) {
+                                if ( file.hasOwnProperty( 'prevInCollection' ) ) {
+                                    expect( file.prevInCollection ).to.not.have.ownProperty( name );
+                                }
+
+                                let nextTitle = array[ index + 1 ].title;
+                                expect( file.nextInCollection ).to.have.ownProperty( name );
+                                expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
+                            } else if ( index === ( array.length - 1 ) ) {
+                                if ( file.hasOwnProperty( 'nextInCollection' ) ) {
+                                    expect( file.nextInCollection ).to.not.have.ownProperty( name );
+                                }
+
+                                let prevTitle = array[ index - 1 ].title;
+                                expect( file.prevInCollection ).to.have.ownProperty( name );
+                                expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
+                            } else {
+                                let nextTitle = array[ index + 1 ].title;
+                                expect( file.nextInCollection ).to.have.ownProperty( name );
+                                expect( file.nextInCollection[ name ].title ).to.equal( nextTitle );
+
+                                let prevTitle = array[ index - 1 ].title;
+                                expect( file.prevInCollection ).to.have.ownProperty( name );
+                                expect( file.prevInCollection[ name ].title ).to.equal( prevTitle );
+                            }
+                        } );
+                    } );
+
+                    expect( todo, todoMessage ).to.have.lengthOf( 0 );
                     done();
                 } );
         } );
